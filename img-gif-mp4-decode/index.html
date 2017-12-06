@@ -101,6 +101,8 @@
                 t_startReq = new Date().getTime();
                 document.getElementById("testimg").appendChild(image);
                 image.onload = timeOnLoad;
+                image.onerror = timeOnLoad;
+
                 image.src = src;
                 return image.decode().then(() => { resolve(image); });
             });

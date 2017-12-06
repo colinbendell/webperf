@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>&lt;picture&lt;&lt;source type&gt; Test</title>
+    <script src="http://1.cuzillion.com/bin/resource.cgi?type=js&sleep=1&expires=-1"></script>
+</head>
+<body onload="done()">
+<h1>Images requested (should only be one):</h1>
+<div id="status"></div>
+<picture>
+    <source type="image/webp" srcset="Ottawa_River.webp">
+    <source type="image/jp2" srcset="Ottawa_River.jp2">
+    <img src="Ottawa_River.jpg">
+</picture>
+
+<script>
+    function done() {
+        for ( const e of performance.getEntries()) {
+            if ( -1 != e.name.indexOf("Ottawa_River") ) {
+                let div = document.createElement("p");
+                div.innerText=`${e.name}: ${Math.round(e.duration)}ms`;
+                document.getElementById("status").appendChild(div)
+            }
+        }
+    }
+</script>
+</body>
+</html>
