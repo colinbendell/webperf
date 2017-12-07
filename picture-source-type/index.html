@@ -19,7 +19,7 @@
         for ( const e of performance.getEntries()) {
             if ( -1 != e.name.indexOf("Ottawa_River") ) {
                 let div = document.createElement("p");
-                div.innerText=`${e.name}: ${Math.round(e.duration)}ms`;
+                div.innerText=`${e.name.replace(/https?:..[^\/]+/,"")}: ${Math.round(e.duration)}ms`;
                 document.getElementById("status").appendChild(div)
             }
         }
