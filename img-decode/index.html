@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Image Decode & Visual Timings</title>
+
+    <style type="text/css">
+        thead tr td { font-size: 2em; text-align: center; }
+        TD { padding: 10px 20px; }
+        .timing { font-size: 2em; text-align: right; }
+        .timeval { font-size: 3em; color: orange; font-weight: bold; text-align: right; }
+        body {
+            width: 900px;
+            font-family: helvetica, arial;
+            background: #000; color: #FFF;
+        }
+        h1 {
+            margin-left: 3em;
+            font-size: 3em;
+        }
+    </style>
+
+</head>
+
+<body >
+
+<h1>Image Custom Metric</h1>
+
+<div id=testimg style="float: left; background: white; padding: 4px; width:800px; height:450px;max-width:800px; max-height:450px;min-width:800px; min-height:450px;">
+
+</div>
+
+<table style="clear: both;">
+    <thead>
+        <tr>
+            <td></td>
+        <td>JPG</td>
+        <td>H.264</td>
+        <td>Hevc</td>
+        </tr>
+    </thead>
+    <tr> <td class=timing>TRANSFER:</td> <td class="timeval" id=resourcetiming_0>...</td><td class="timeval" id=resourcetiming_1></td><td class="timeval" id=resourcetiming_2></td> </tr>
+    <tr> <td class=timing>ONLOAD:</td> <td class="timeval" id=onloadhandler_0>...</td><td class="timeval" id=onloadhandler_1></td><td class="timeval" id=onloadhandler_2></td> </tr>
+    <tr> <td class=timing>DECODE:</td> <td class="timeval" id=decode_0>...</td><td class="timeval" id=decode_1></td><td class="timeval" id=decode_2></td> </tr>
+</table>
+
+<p id="debug_navtiming">
+</p>
+<script>
+    function median(values) {
+        values = values.slice(0).sort( function(a, b) {return a - b; } );
+
+        return middle(values);
+    }
+
+    function middle(values) {
+        let len = values.length;
+        let half = Math.floor(len / 2);
+
+        if(len % 2)
+            return (values[half - 1] + values[half]) / 2.0;
+        else
+            return values[half];
+    }
+</script>
+<script>
+    let t_startReq, t_endByte, t_endDecode, t_onLoad;
+    let t_results = [];
+    function reportMetric(name, value, value2) {
+        document.getElementById(name).innerHTML = value ? `${value} ms` : "not supported";
+    }
+
+    function endTest() {
+        const fileTypes=[null, ".mp4", "_hevc.mp4"];
+        if (t_onLoad && t_endByte) {
+            let result = [t_onLoad, t_endByte, t_endDecode - t_startReq, t_onLoad - t_startReq];
+            t_onLoad =0; t_endByte=0;
+
+            let currentTest = Math.floor(t_results.length / 10);
+
+            reportMetric(`resourcetiming_${currentTest}`, result[1]);
+            reportMetric(`decode_${currentTest}`, result[2]);
+            reportMetric(`onloadhandler_${currentTest}`, result[3]);
+            t_results.push(result);
+
+            if (t_results.length < 30) {
+                setTimeout(() => {runTest(fileTypes[Math.floor(t_results.length / 10)])}, 1000);
+            }
+            else {
+                // reportMetric("resourcetiming", median(t_results_gif.map(e => e[1])));
+                // reportMetric("decode", median(t_results_gif.map(e => e[2])));
+                // reportMetric("onloadhandler", median(t_results_gif.map(e => e[3])));
+                //
+                // reportMetric("resourcetiming_mp4", median(t_results_mp4.map(e => e[1])));
+                // reportMetric("decode_mp4", median(t_results_mp4.map(e => e[2])));
+                // reportMetric("onloadhandler_mp4", median(t_results_mp4.map(e => e[3])));
+            }
+        }
+    }
+
+    function timeOnLoad() {
+        t_onLoad = new Date().getTime();
+        endTest();
+    }
+
+    function loadImage(src) {
+        return new Promise(resolve => {
+            document.getElementById("testimg").innerText = "";
+        let image = new Image;
+        t_startReq = new Date().getTime();
+        document.getElementById("testimg").appendChild(image);
+        image.onload = timeOnLoad;
+        image.onerror = timeOnLoad;
+
+        image.src = src;
+        return image.decode().then(() => { resolve(image); });
+    });
+    }
+
+    function runTest(suffix) {
+        let url = window.location.hash || "1.jpg";
+        url = url.replace(/^#/, '');
+
+        if (suffix) url = url.replace(/\.[^.]+$/, suffix);
+        loadImage(`${url}?t=${new Date().getTime()}`)
+            .then(image => {
+                t_endDecode = new Date().getTime();
+                for ( const e of performance.getEntries()) {
+                    if ( -1 !== e.name.indexOf(image.src) ) {
+                        t_endByte = Math.round(e.duration || 0);
+                    }
+                }
+                endTest();
+            }
+        )
+    }
+    setTimeout(runTest, 1000);
+</script>
+</body>
+</html>
