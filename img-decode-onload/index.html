@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>img.decode() Test</title>
+    <script src="//stevesouders.com/bin/resource.cgi?type=js&sleep=1&expires=-1"></script>
+    <script>
+        function ready() {
+            [...document.getElementsByTagName('img')].forEach(img => {
+                img.decode().then(() => {
+                    //success
+                    document.getElementById("status").innerHTML += `<p>${img.src.replace(/https?:..[^\/]+/,"")} : ${new Date().getTime()}</p>`;
+                }, () => {
+                    //rejection
+                    document.getElementById("status").innerHTML += `<p>ERROR: ${img.src.replace(/https?:..[^\/]+/,"")} : ${new Date().getTime()}</p>`;
+                });
+            });
+        }
+        document.addEventListener("DOMContentLoaded", ready);
+    </script>
+</head>
+<body>
+<h1>Images requested (should only be one):</h1>
+<div id="status"></div>
+<picture>
+    <source type="image/webp" srcset="Ottawa_River.webp">
+    <source type="image/jp2" srcset="Ottawa_River.jp2">
+    <img id="ottawa" src="Ottawa_River.jpg">
+</picture>
+<table style="border-collapse: collapse; width: 100%; max-width: 100%; table-layout: fixed;">
+    <colgroup>
+        <col style="width:50%;">
+        <col style="width:50%;">
+    </colgroup>
+    <thead><td>JPG</td><td>H.264</td></thead>
+    <tr><td><img src="1.jpg"></td><td><img src="1.mp4"></td></tr>
+    <tr><td>JPEG: 43.84 KB<br/> WebP: 29.61 KB</td><td>H.264: 29.89 KB<br/>Hevc: 27.92 KB</td></tr>
+    <tr><td><img src="2.jpg"></td><td><img src="2.mp4"></td></tr>
+    <tr><td>JPEG: 86.25 KB<br/>WebP: 59.18 KB</td><td>H.264: 62.28 KB<br/>Hevc: 59.46 KB</td></tr>
+    <tr><td><img src="3.jpg"></td><td><img src="3.mp4"></td></tr>
+    <tr><td>JPEG: 297.05 KB<br/>WebP: 198.38 KB</td><td>H.264: 190.13 KB<br/>Hevc: 178.72 KB</td></tr>
+    <tr><td><img src="4.jpg"></td><td><img src="4.mp4"></td></tr>
+    <tr><td>JPEG: 251.03 KB<br/>WebP: 172.82 KB</td><td>H.264: 177.52 KB<br/>Hevc: 166.45 KB</td></tr>
+    <tr><td><img src="5.jpg"></td><td><img src="5.mp4"></td></tr>
+    <tr><td>JPEG: 120.78 KB<br/>WebP: 80.76 KB</td><td>H.264: 72.17 KB<br/>Hevc: 61.87 KB</td></tr>
+    <tr><td><img src="404.jpg"></td><td><img src="404.mp4"></td></tr>
+</table>
+
+</body>
+</html>
