@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+    <title>Resources Requests with Client Hints</title>
+    <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width">
+</head>
+<body>
+    <img id="img1" src="http://res.cloudinary.com/demo/dpr_3.0/w_auto:breakpoints/sample.jpg" sizes="(max-resolution: 1dppx) 405px, (max-resolution: 2dppx) 203px, (max-resolution: 3dppx) 135px, 102px"
+    />
+    <script src="testharness.js"></script>
+    <script src="testharnessreport.js"></script>
+    <script>
+        function runTests() {
+
+            t = async_test(()=>{}); // nasty work around to allow multiple synchronous tests with WPT
+
+            test(t => {
+                let img = document.getElementById("img1");
+                let resourceTiming = window.performance.getEntriesByName(img.currentSrc, "resource");
+
+                assert_equals(resourceTiming.length, 1, img.currentSrc);
+                assert_equals(img.naturalWidth, 784, img.currentSrc);
+            }, "should support dpr_auto with w_auto:breakpoints");
+
+            t.done();
+        }
+
+        window.addEventListener("load", runTests);
+    </script>
+</body>
+</html>
