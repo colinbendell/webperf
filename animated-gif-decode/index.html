@@ -5,36 +5,69 @@
     <title>Image Decode & Visual Timings</title>
 
     <style type="text/css">
-        TD { padding: 10px 20px; }
+        thead tr td {font-size: 1.5em; text-align: center;}
+        TD { padding: 0.01em 0.3em; }
         .timing { font-size: 2em; text-align: right; }
-        .timeval { font-size: 3em; color: orange; font-weight: bold; text-align: right; }
+        .timeval { font-size: 2em; color: orange; font-weight: bold; text-align: right; }
+        .desc {
+            font-family: monospace;
+            font-size: 0.4em;
+            font-style: italic;
+        }
     </style>
 
 </head>
 
 <body style="width: 900px; font-family: helvetica, arial; background: #000; color: #FFF;">
 
-    <h1 style="margin-left: 3em; font-size: 3em;">Image Custom Metric</h1>
+    <h1 style="margin-left: 3em; font-size: 2.5em;">Animated Gif Comparison</h1>
 
     <div id=testimg style="float: left; background: white; padding: 4px; width:800px; height:450px;max-width:800px; max-height:450px;min-width:800px; min-height:450px;">
 
     </div>
 
     <table style="clear: both;">
-        <tr> <td class=timing>TRANSFER:</td> <td class="timeval" id=resourcetiming>...</td><td>vs.</td><td class="timeval" id=resourcetiming_mp4></td> </tr>
-        <tr> <td class=timing>ONLOAD:</td> <td class="timeval" id=onloadhandler>...</td><td>vs.</td><td class="timeval" id=onloadhandler_mp4></td> </tr>
-        <tr> <td class=timing>DECODE:</td> <td class="timeval" id=decode>...</td><td>vs.</td><td class="timeval" id=decode_mp4></td> </tr>
+        <thead>
+        <tr>
+            <td></td>
+            <td>GIF</td>
+            <td>WebP</td>
+            <td>MP4<br/>(avc1)</td>
+            <td>MP4<br/>(hvc1)</td>
+        </tr>
+        </thead>
+        <tr> <td class=timing><div>Bytes:</div><div class="desc" >resource.encodedByteSize</div></td> <td class="timeval" id=bytes_0>...</td><td class="timeval" id=bytes_1></td><td class="timeval" id=bytes_2></td><td class="timeval" id=bytes_3></td> </tr>
+        <tr> <td class=timing><div>TRANSFER:</div><div class="desc" >resource.responseEnd() - resource.responseStart</div></td> <td class="timeval" id=resourcetiming_0>...</td><td class="timeval" id=resourcetiming_1></td><td class="timeval" id=resourcetiming_2></td><td class="timeval" id=resourcetiming_3></td> </tr>
+        <tr> <td class=timing><div>ONLOAD:</div><div class="desc" >img.onLoad() - resource.responseStart</div></td> <td class="timeval" id=onloadhandler_0>...</td><td class="timeval" id=onloadhandler_1></td><td class="timeval" id=onloadhandler_2></td><td class="timeval" id=onloadhandler_3></td> </tr>
+        <tr> <td class=timing><div>RAF:</div><div class="desc" >requestAnimationFrame() - resource.responseStart</div></td> <td class="timeval" id=raf_0>...</td><td class="timeval" id=raf_1></td><td class="timeval" id=raf_2></td><td class="timeval" id=raf_3></td> </tr>
+        <tr> <td class=timing><div>DECODE:</div><div class="desc" >img.decode() - resource.responseStart</div></td> <td class="timeval" id=decode_0>...</td><td class="timeval" id=decode_1></td><td class="timeval" id=decode_2></td><td class="timeval" id=decode_3></td> </tr>
     </table>
 
     <p id="debug_navtiming">
     </p>
     <script>
+        const TEST_GROUPS=[".gif", ".webp", "_avc1.mp4", "_hvc1.mp4"];
+        const TEST_RUNS=10;
+        let results = [];
+
+        //helper promise to sleep
+        function sleep(duration, val) {
+            return new Promise(resolve => {
+                setTimeout(resolve.bind(null, val), duration)
+            });
+        }
+
+        // helper method for finding the median in a list of numbers (filtering out non numbers)
         function median(values) {
-            values = values.slice(0).sort( function(a, b) {return a - b; } );
+            values = values
+                .slice(0)
+                .filter(value => Number(value) === value)
+                .sort( function(a, b) {return a - b; } );
 
             return middle(values);
         }
 
+        // helper method to find the middle value in a list
         function middle(values) {
             let len = values.length;
             let half = Math.floor(len / 2);
@@ -44,83 +77,149 @@
             else
                 return values[half];
         }
-    </script>
-    <script>
-        let t_startReq, t_endByte, t_endDecode, t_onLoad;
-        let t_results_gif = [];
-        let t_results_mp4 = [];
-        function reportMetric(name, value, value2) {
-            document.getElementById(name).innerHTML = value ? `${value} ms` : "not supported";
+
+        function formatMetric(value, round = 0, unit = "ms", empty="-", prefix="") {
+            if (!!value && Number(value) === value)
+                value = Math.round(value*(10**round) + Number.EPSILON)/(10**round);
+
+            return value ? `${prefix}${value} ${unit}` : empty;
+        }
+        function reportMetric(name, value, min = null, max = null, round = 0, unit = "ms") {
+            if (!!value && Number(value) === value)
+                value = Math.round(value*(10**round) + Number.EPSILON)/(10**round);
+
+            let valueText = formatMetric(value, round, unit);
+            let minValue = formatMetric(min, round, unit, "");
+            let maxValue = formatMetric(max, round, unit, "");
+
+            document.getElementById(name).innerHTML = `<div>${valueText}</div><div class="desc" style="float:left">${minValue}</div><div class="desc" style="float:right">${maxValue}</div>`;
         }
 
-        function endTest() {
-            if (t_onLoad && t_endByte) {
-                let result = [t_onLoad, t_endByte, t_endDecode - t_startReq, t_onLoad - t_startReq];
-                t_onLoad =0; t_endByte=0;
+        function endTest(test) {
+            let isReady = test.onErrorEnd || (test.onLoadEnd && test.perf && test.rafEnd);
+            if (!isReady) {
+                return sleep(200, test).then(endTest);
 
-                if (t_results_gif.length < 10) {
-                    reportMetric("resourcetiming", result[1]);
-                    reportMetric("decode", result[2]);
-                    reportMetric("onloadhandler", result[3]);
-                    t_results_gif.push(result);
-                }
-                else {
-                    reportMetric("resourcetiming_mp4", result[1]);
-                    reportMetric("decode_mp4", result[2]);
-                    reportMetric("onloadhandler_mp4", result[3]);
-                    t_results_mp4.push(result);
-                }
-
-                if (t_results_gif.length < 10) {
-                    setTimeout(runTest, 1000);
-                }
-                else if (t_results_mp4.length < 10) {
-                    setTimeout(() => {runTest("ottawa_river_avc1.mp4")}, 1000);
-                }
-                else {
-                    reportMetric("resourcetiming", median(t_results_gif.map(e => e[1])));
-                    reportMetric("decode", median(t_results_gif.map(e => e[2])));
-                    reportMetric("onloadhandler", median(t_results_gif.map(e => e[3])));
-
-                    reportMetric("resourcetiming_mp4", median(t_results_mp4.map(e => e[1])));
-                    reportMetric("decode_mp4", median(t_results_mp4.map(e => e[2])));
-                    reportMetric("onloadhandler_mp4", median(t_results_mp4.map(e => e[3])));
-                }
             }
-        }
 
-        function timeOnLoad() {
-            t_onLoad = new Date().getTime();
-            endTest();
-        }
 
-        function loadImage(src) {
-            return new Promise(resolve => {
-                document.getElementById("testimg").innerText = "";
+            // performance.timeOrigin is not reliable for long running page. why??
+            let timeOrigin = performance.timing.requestStart;
+
+            //basic duration values
+            if (!test.onErrorEnd) {
+                test.resourceDur = Math.round(test.perf.duration || 0);
+                test.resourceBytes = test.perf.decodedBodySize;
+                test.onloadDur = test.onLoadEnd - timeOrigin - test.perf.responseStart;
+                test.decodeDur = test.decodeEnd - timeOrigin - test.perf.responseStart;
+                test.rafDur = test.rafEnd - timeOrigin - test.perf.responseStart;
+            }
+            // report current Test Results
+            let testIndex = Math.floor(results.length / TEST_RUNS);
+            results.push(test);
+
+            let testSet = results.slice(testIndex*TEST_RUNS, (testIndex + 1) * TEST_RUNS - 1);
+            console.log(testIndex);
+            reportMetric(`bytes_${testIndex}`, !test.resourceBytes ? null : Math.round(test.resourceBytes / 1024 / 1024 * 100)/100, null, null, 1, 'MB');
+            reportMetric(`resourcetiming_${testIndex}`, test.resourceDur);
+            reportMetric(`decode_${testIndex}`, test.decodeDur);
+            reportMetric(`onloadhandler_${testIndex}`, test.onloadDur);
+            reportMetric(`raf_${testIndex}`, test.rafDur);
+
+            // if last in the set, update to the median results (the last run won't be shown)
+            if (results.length % TEST_RUNS === 0) {
+
+                reportMetric(`resourcetiming_${testIndex}`, median(testSet.map(v => v.resourceDur)), Math.min(...testSet.map(v => v.resourceDur)), Math.max(...testSet.map(v => v.resourceDur)));
+                reportMetric(`decode_${testIndex}`, median(testSet.map(v => v.decodeDur)), Math.min(...testSet.map(v => v.decodeDur)), Math.max(...testSet.map(v => v.decodeDur)));
+                reportMetric(`onloadhandler_${testIndex}`, median(testSet.map(v => v.onloadDur)), Math.min(...testSet.map(v => v.onloadDur)), Math.max(...testSet.map(v => v.onloadDur)));
+                reportMetric(`raf_${testIndex}`, median(testSet.map(v => v.rafDur)), Math.min(...testSet.map(v => v.rafDur)), Math.max(...testSet.map(v => v.rafDur)));
+            }
+
+            // if we have another test set to run, kick it off
+            if (results.length < (TEST_GROUPS.length*TEST_RUNS)) {
+                let nextTestIndex = TEST_GROUPS[Math.floor(results.length / TEST_RUNS)];
+                resetTest();
+                return sleep(1000, nextTestIndex).then(runTest);
+            }
+
+            //tidy up the display for the end...
+            if (test.onErrorEnd) {
+                resetTest();
                 let image = new Image;
-                t_startReq = new Date().getTime();
+                image.src = getImageUrl();
                 document.getElementById("testimg").appendChild(image);
-                image.onload = timeOnLoad;
-                image.onerror = timeOnLoad;
+            }
 
-                image.src = src;
-                return image.decode().then(() => { resolve(image); });
-            });
+            return Promise.resolve();
         }
 
-        function runTest(filename = "ottawa_river.gif") {
-            loadImage(`${filename}?t=${new Date().getTime()}`)
-                .then(image => {
-                    t_endDecode = new Date().getTime();
-                    for ( const e of performance.getEntries()) {
-                        if ( -1 != e.name.indexOf(image.src) ) {
-                            t_endByte = Math.round(e.duration);
-                        }
-                    }
-                    endTest();
-                })
+        // reset old test.
+        // TODO: should we wait until the CPU quiets down?
+        function resetTest() {
+            document.getElementById("testimg").innerText = "";
         }
-        setTimeout(runTest, 1000);
+
+        /**
+         * Replace the test image placeholder and collect timings from the new image
+         * @param srcUrl url for the image
+         * @returns {Promise<{}>} object containing the test results
+         */
+        function loadImage(srcUrl) {
+            let currTest = {};
+
+            let image = new Image;
+
+            // OnLoad timing
+            image.onload = () => {
+                currTest.onLoadEnd = new Date().getTime();
+                // RequestAnimationFrame timing
+                requestAnimationFrame(() => currTest.rafEnd = new Date().getTime());
+            };
+            //OnError timing
+            image.onerror = () => currTest.onErrorEnd = new Date().getTime();
+
+            //imprecise start timing
+            currTest.testStart = new Date().getTime();
+
+            image.src = srcUrl;
+            document.getElementById("testimg").appendChild(image);
+
+            return image.decode()
+                .then(() => currTest.decodeEnd = new Date().getTime()) //decode timing
+                .catch(() => currTest.onErrorEnd = new Date().getTime())
+                .then(() => sleep(200))
+                .then(() => currTest.perf = performance.getEntries().filter(v => image.src === v.name)[0])
+                .then(() => currTest)
+        }
+
+        function getImageUrl() {
+            let url = window.location.hash || "1.gif";
+            return url.replace(/^#/, '');
+        }
+
+        /**
+         * selects the file to load in the <img> tag. The default is the file `1.gif` but a new file can be selected in
+         * the url hash: http://localhost/index.html#cats.gif
+         *
+         * Using the suffix param, the extension is replaced with a different flavour of the original:
+         * 1.gif -> 1.webp
+         * 1.gif -> 1_avc1.mp4
+         * 1.gif -> 1_hvc1.mp4
+         *
+         * @param suffix the replacement file extension for the test set
+         */
+        function runTest(suffix) {
+            let url = getImageUrl();
+
+            if (suffix) url = url.replace(/\.[^.]+$/, suffix);
+
+            //add `?t=` local cache busting timestamp
+            loadImage(`${url}?t=${new Date().getTime()}`)
+                .then(endTest);
+        }
+
+        //kick things off
+        sleep(1000).then(runTest);
     </script>
 </body>
 </html>

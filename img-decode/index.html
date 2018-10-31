@@ -41,6 +41,7 @@
     </thead>
     <tr> <td class=timing>TRANSFER:</td> <td class="timeval" id=resourcetiming_0>...</td><td class="timeval" id=resourcetiming_1></td><td class="timeval" id=resourcetiming_2></td> </tr>
     <tr> <td class=timing>ONLOAD:</td> <td class="timeval" id=onloadhandler_0>...</td><td class="timeval" id=onloadhandler_1></td><td class="timeval" id=onloadhandler_2></td> </tr>
+    <tr> <td class=timing>RAF:</td> <td class="timeval" id=raf_0>...</td><td class="timeval" id=raf_1></td><td class="timeval" id=raf_2></td> </tr>
     <tr> <td class=timing>DECODE:</td> <td class="timeval" id=decode_0>...</td><td class="timeval" id=decode_1></td><td class="timeval" id=decode_2></td> </tr>
 </table>
 
@@ -64,7 +65,7 @@
     }
 </script>
 <script>
-    let t_startReq, t_endByte, t_endDecode, t_onLoad;
+    let t_startReq, t_endByte, t_endDecode, t_onLoad, t_raf;
     let t_results = [];
     function reportMetric(name, value, value2) {
         document.getElementById(name).innerHTML = value ? `${value} ms` : "not supported";
@@ -72,15 +73,16 @@
 
     function endTest() {
         const fileTypes=[null, ".mp4", "_hevc.mp4"];
-        if (t_onLoad && t_endByte) {
-            let result = [t_onLoad, t_endByte, t_endDecode - t_startReq, t_onLoad - t_startReq];
-            t_onLoad =0; t_endByte=0;
+        if (t_onLoad && t_endByte && t_raf) {
+            let result = [t_onLoad, t_endByte, t_endDecode - t_startReq, t_onLoad - t_startReq, t_raf - t_startReq];
+            t_onLoad =0; t_endByte=0; t_raf=0;
 
             let currentTest = Math.floor(t_results.length / 10);
 
             reportMetric(`resourcetiming_${currentTest}`, result[1]);
             reportMetric(`decode_${currentTest}`, result[2]);
             reportMetric(`onloadhandler_${currentTest}`, result[3]);
+            reportMetric(`raf_${currentTest}`, result[4]);
             t_results.push(result);
 
             if (t_results.length < 30) {
@@ -100,6 +102,11 @@
 
     function timeOnLoad() {
         t_onLoad = new Date().getTime();
+        requestAnimationFrame(timeRAF);
+        endTest();
+    }
+    function timeRAF() {
+        t_raf = new Date().getTime();
         endTest();
     }
 
@@ -108,12 +115,13 @@
             document.getElementById("testimg").innerText = "";
         let image = new Image;
         t_startReq = new Date().getTime();
-        document.getElementById("testimg").appendChild(image);
+
         image.onload = timeOnLoad;
         image.onerror = timeOnLoad;
 
         image.src = src;
-        return image.decode().then(() => { resolve(image); });
+        document.getElementById("testimg").appendChild(image);
+        return image.decode().then(() => { resolve(image)});
     });
     }
 
