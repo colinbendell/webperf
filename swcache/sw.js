@@ -1,6 +1,7 @@
 // sw.js
 const cacheName = 'test-cloudinary-cache';
 const files = [
+    './',
     './index.html',
     'https://res.cloudinary.com/tamas-demo/image/upload/w_250,h_250,c_thumb,r_max,g_face,f_auto/jam/darthvader.png',
     'https://res.cloudinary.com/tamas-demo/image/upload/w_250,h_250,c_thumb,r_max,g_face/jam/hansolo.png'
