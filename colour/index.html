@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Colour Profile Test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        table.color, table.demo {
+            table-layout: fixed;
+            caption-side: bottom;
+            border-collapse: collapse;
+        }
+
+        table.color, table.demo, table.results {
+            border-spacing: 0;
+            border: 0;
+        }
+
+        .color th, .color td {
+            width: 50px;
+            padding: 0;
+            vertical-align: top
+        }
+
+        .color th, caption {
+            padding: 2px 0;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .demo td {
+            height: 10px;
+            padding: 0;
+            vertical-align: bottom
+        }
+
+        .color td img, .color td canvas, .color td svg {
+            display: block;
+            width: 100%;
+            height: 200px
+        }
+
+        .color td svg {
+            width: 50px
+        }
+
+        .color td:first-child {
+            height: 50px;
+        }
+
+        td.no {
+            color: red;
+        }
+
+        .results th {
+            text-align: left;
+            padding: 2px 5px;
+        }
+
+        .results td {
+            text-align: center;
+        }
+
+        .results tr:not(:first-child) > * {
+            border-top: 1px solid #fff;
+        }
+
+        .results tr:not(:last-child) > * {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .results tbody th {
+            font-weight: normal;
+        }
+
+        dt {
+            font-weight: bold;
+            margin-top: 0.5em
+        }
+        video {
+            width: 50px;
+            height: 200px;
+        }
+
+    </style>
+</head>
+<body>
+<h1>Colour Profile Test</h1>
+
+<table class="color">
+    <thead>
+    <tr>
+        <th><abbr>CSS</abbr></th>
+        <th><abbr>HTML</abbr></th>
+        <th><abbr>GIF</abbr></th>
+        <th>sRGB <abbr>PNG</abbr></th>
+        <th>anon <abbr>PNG</abbr></th>
+        <th><abbr>BT709 H264</abbr></th>
+        <th>anon <abbr>H264</abbr></th>
+        <th><abbr>BT709 HEVC</abbr></th>
+        <th>anon <abbr>HEVC</abbr></th>
+        <th>sRGB <abbr>JPEG</abbr></th>
+        <th>anon <abbr>JPEG</abbr></th>
+        <th>Rec. 709 <abbr>JPEG</abbr></th>
+        <th>Canvas fill</th>
+        <th><abbr>SVG</abbr> fill</th>
+        <th><abbr>BT709 VP8</abbr></th>
+        <th>anon <abbr>VP8</abbr></th>
+        <th><abbr>BT709 VP9</abbr></th>
+        <th>anon <abbr>VP9</abbr></th>
+    </tr>
+    </thead>
+    <tr>
+        <td style="background:#c08800; height:50px"></td>
+        <td bgcolor="#c08800"></td>
+        <td rowspan="4"><img alt="the image must be displayed for the test" src="https://kornel.ski/en/color/anon.gif"
+                             title="unlabelled GIF"></td>
+        <td rowspan="4"><img alt="the image must be displayed for the test" src="https://kornel.ski/en/color/srgb.png"
+                             title="sRGB PNG"></td>
+        <td rowspan="4"><img alt="the image must be displayed for the test" src="https://kornel.ski/en/color/anon.png"
+                             title="unlabelled PNG"></td>
+        <td rowspan="4">
+            <div style="width:50px;height:200px">
+                <video playsinline muted autoplay
+                       src="https://res.cloudinary.com/maxr/video/upload/v1556464295/color/bt709_h264_out_color_matrix"/>
+            </div>
+        </td>
+        <td rowspan="4">
+            <div style="width:50px;height:200px">
+                <video playsinline muted autoplay
+                       src="https://res.cloudinary.com/maxr/video/upload/v1556464295/color/anon_h264_out_color_matrix"/>
+            </div>
+        </td>
+        <td rowspan="4">
+            <div style="width:50px;height:200px">
+                <video playsinline muted autoplay
+                       src="https://res.cloudinary.com/maxr/video/upload/v1556464757/color/bt709_hevc_input_specified_out_color_matrix"/>
+            </div>
+        </td>
+        <td rowspan="4">
+            <div style="width:50px;height:200px">
+                <video playsinline muted autoplay
+                       src="https://res.cloudinary.com/maxr/video/upload/v1556464757/color/anon_hevc_input_specified_out_color_matrix"/>
+            </div>
+        </td>
+        <td rowspan="4"><img alt="the image must be displayed for the test" src="https://kornel.ski/en/color/srgb.jpg"
+                             title="sRGB JPEG"></td>
+        <td rowspan="4"><img alt="the image must be displayed for the test" src="https://kornel.ski/en/color/anon.jpg"
+                             title="unlabelled JPEG"></td>
+        <td rowspan="4"><img alt="the image must be displayed for the test" src="https://kornel.ski/en/color/rec709.jpg"
+                             title="Rec. 709 JPEG"></td>
+        <td rowspan="4">
+            <canvas id="canvas" title="Canvas" width="50" height="200">Canvas must be supported for the test</canvas>
+        </td>
+        <td rowspan="4">
+            <svg width="50" height="50"><title>SVG test image</title>
+                <rect x="0" y="0" width="50" height="50" fill="#c08800"></rect>
+                <rect x="0" y="50" width="50" height="50" fill="#88c088"></rect>
+                <rect x="0" y="100" width="50" height="50" fill="#ff8888"></rect>
+                <rect x="0" y="150" width="50" height="50" fill="#4088c0"></rect>
+            </svg>
+        </td>
+        <td rowspan="4">
+            <div style="width:50px;height:200px">
+                <video playsinline muted autoplay
+                       src="https://res.cloudinary.com/maxr/video/upload/v1556464090/color/bt709_vp8_out_color_matrix"/>
+            </div>
+        </td>
+        <td rowspan="4">
+            <div style="width:50px;height:200px">
+                <video playsinline muted autoplay
+                       src="https://res.cloudinary.com/maxr/video/upload/v1556464196/color/anon_vp8_out_color_matrix"/>
+            </div>
+        </td>
+        <td rowspan="4">
+            <div style="width:50px;height:200px">
+                <video playsinline muted autoplay
+                       src="https://res.cloudinary.com/maxr/video/upload/v1556464408/color/bt709_vp9_out_color_matrix"/>
+            </div>
+        </td>
+        <td rowspan="4">
+            <div style="width:50px;height:200px">
+                <video playsinline muted autoplay
+                       src="https://res.cloudinary.com/maxr/video/upload/v1556464408/color/anon_vp9_out_color_matrix"/>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td style="background:#88c088; height:50px"></td>
+        <td bgcolor="#88c088"></td>
+    </tr>
+    <tr>
+        <td style="background:#ff8888; height:50px"></td>
+        <td bgcolor="#ff8888"></td>
+    </tr>
+    <tr>
+        <td style="background:#4088c0; height:50px"></td>
+        <td bgcolor="#4088c0"></td>
+    </tr>
+</table>
+<script>
+    (function () {
+        var c = document.getElementById('canvas').getContext('2d');
+        var colors = [
+            '#c08800',
+            '#88c088',
+            '#ff8888',
+            '#4088c0',
+        ];
+        for (var i = 0; i < colors.length; i++) {
+            c.fillStyle = colors[i];
+            c.fillRect(0, i * 50, 50, 50);
+        }
+    })();
+</script>
+<p>The test above should have smooth lines like this:</p>
+
+<table class="demo">
+    <caption>GOOD</caption>
+    <tr>
+        <td style="background:#c08800; width:100px; height: 10px"></td>
+    </tr>
+    <tr>
+        <td style="background:#88c088; height: 10px"></td>
+    </tr>
+    <tr>
+        <td style="background:#ff8888; height: 10px"></td>
+    </tr>
+    <tr>
+        <td style="background:#4088c0; height: 10px"></td>
+    </tr>
+</table>
+<p>Without any blocks standing out like this:</p>
+
+<table class="demo">
+    <caption>BAD</caption>
+    <tr>
+        <td style="background:#c08800; width:30px; height: 10px"></td>
+        <td style="background:#c06600; width:20px;"></td>
+        <td style="background:#c08800; width:10px; height: 10px"></td>
+        <td style="background:#aa8800; width:10px; "></td>
+        <td style="background:#c08800; width:30px; height: 10px"></td>
+    </tr>
+    <tr>
+        <td style="background:#88c088; width:30px; height: 10px"></td>
+        <td style="background:#66c066; width:20px;"></td>
+        <td style="background:#88c088; width:10px; height: 10px"></td>
+        <td style="background:#88aa88; width:10px; "></td>
+        <td style="background:#88c088; width:30px; height: 10px"></td>
+    </tr>
+    <tr>
+        <td style="background:#ff8888; width:30px; height: 10px"></td>
+        <td style="background:#ff6666; width:20px;"></td>
+        <td style="background:#ff8888; width:10px; height: 10px"></td>
+        <td style="background:#aa8888; width:10px; "></td>
+        <td style="background:#ff8888; width:30px; height: 10px"></td>
+    </tr>
+    <tr>
+        <td style="background:#4088c0; width:30px; height: 10px"></td>
+        <td style="background:#0066c0; width:20px;"></td>
+        <td style="background:#4088c0; width:10px; height: 10px"></td>
+        <td style="background:#4088aa; width:10px; "></td>
+        <td style="background:#4088c0; width:30px; height: 10px"></td>
+    </tr>
+</table>
+
+
+</body>
+</html>
