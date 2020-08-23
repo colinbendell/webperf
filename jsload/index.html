@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <!-- (A) SCRIPT READY FUNCTION -->
+    <script>
+        function ready (whichone) {
+            console.log(`onload ${whichone.src}`);
+        }
+    </script>
+    <link href="//stevesouders.com/bin/resource.cgi?type=css&sleep=2&t=1512427244" rel="stylesheet">
+
+    <!-- (B) APPEND ONLOAD ATTRIBUTE -->
+    <script defer src="1.js" onload="ready(this)"></script>
+    <script async src="2.js" onload="ready(this)"></script>
+
+    <!-- (C) DYNAMIC JS LOAD JS -->
+    <script async>
+        !function init(src) {
+            var script = document.createElement('script');
+            script.setAttribute("async", "");
+            script.src = src;
+            script.onload = function () {
+                console.log(this.src);
+            };
+            console.log(`inject: ${script.src}`);
+            document.head.appendChild(script);
+        }('3.js');
+        console.log('inline js done');
+    </script>
+    <script src="//stevesouders.com/bin/resource.cgi?type=js&sleep=2&t=1512427244" onload="ready(this)"></script>
+    <script async src="//stevesouders.com/bin/resource.cgi?type=js&sleep=2&t=1512427245" onload="ready(this)"></script>
+
+    <script>
+        console.log ('head done');
+    </script>
+
+</head>
+<body>
+
+</body>
+</html>
