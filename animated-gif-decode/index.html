@@ -77,7 +77,7 @@
     </p>
     <script>
         const TEST_GROUPS=[".gif", ".webp", ".avif", "_av1.mp4", ".mp4", "_hvc1.mp4"];
-        const TEST_RUNS=10;
+        const TEST_RUNS=11;
         let perfEntries = [];
         let results = [];
 
@@ -87,14 +87,22 @@
                 setTimeout(resolve.bind(null, val), duration)
             });
         }
-        const observer = new PerformanceObserver((list) => {
-            perfEntries.push(...list.getEntries());
-        });
-        if (PerformanceObserver.supportedEntryTypes.includes('element')) {
-            observer.observe({entryTypes: ['resource', 'element'], buffered: true});
-        }
-        else if (PerformanceObserver.supportedEntryTypes.includes('resource')) {
-            observer.observe({entryTypes: ['resource'], buffered: true});
+        const observerWorker = function(list) { perfEntries.push(...list.getEntries()); }
+        const resourceObserver = new PerformanceObserver(observerWorker);
+        const elementObserver = new PerformanceObserver(observerWorker);
+        for (const observerType of ['resource', 'element']) {
+            if (PerformanceObserver.supportedEntryTypes.includes(observerType)) {
+                try {
+                    resourceObserver.observe({type: observerType, buffered: true});
+                }
+                catch {
+                    // Safari doesn't support `type` but does allow buffered with `entryTypes`
+                    // Firefox doesn't support `entryTypes` with buffered
+                    // Chrome probably does whatever it wants
+                    elementObserver.observe({entryTypes: [observerType], buffered: true});
+                }
+
+            }
         }
 
         // helper method for finding the median in a list of numbers (filtering out non numbers)
@@ -224,6 +232,7 @@
          * @returns {Promise<{}>} object containing the test results
          */
         async function loadImage(srcUrl) {
+            console.log(`Loading img: ${srcUrl}`)
             let currTest = {};
 
             let image = new Image;
@@ -245,11 +254,12 @@
             image.src = srcUrl;
             document.getElementById("testimg").appendChild(image);
 
-            await image.decode().catch(() => currTest.onErrorEnd = performance.now());
-            currTest.decodeEnd = performance.now();
-            currTest.url = image.src;
-            if (!currTest.onErrorEnd) await sleep(200); // fix some race conditions
+            // don't await, because Safari can go into limbo land and not always return
+            image.decode()
+                .then(() => currTest.decodeEnd = performance.now())
+                .catch(() => currTest.onErrorEnd = performance.now());
 
+            currTest.url = image.src;
             return currTest;
         }
 
