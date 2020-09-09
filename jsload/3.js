@@ -1,4 +1,11 @@
-console.log('3 exec');
+function perflog(s, name) {
+    const async = s.async ? " async" : "";
+    const defer = s.defer ? " defer" : "";
+    const src = s.src.replace(/^https?:\/\/[^\/]+/, "");
+    performance.mark(`${src}${async}${defer}: ${name}`);
+}
+perflog(document.currentScript,'init(); // exec start');
+
 // 3b7671257ddc130dd7a02fc52cc46f65aa4b9502a35b0c83f07b45364505405e75f04a3dfe1bdb28
 // bd2cdefe2eee8d84de3e2402ba168941531aabeb5b3c781b64eff8ca867cece361d580b942494dfd
 // 8e577f14e0228ff2aa3713a4677beac3427375de5b5d2b2cecfafe21a2ce3c7fca4361c2c504116d
@@ -37499,10 +37506,17 @@ console.log('3 exec');
 // 64fa2a7facd385873578508b5cad35e82d34485ec4856dee36ee8ea26576cd51ace35d9677469d46
 // c4423d0585c98920c30733b20ad0c40af1b366919105bad6c990c9cd10a6b9e33cafd1c1eff000cc
 // 9728d17b1f2734e00cf85b7fae1be4b17af97eab6fb5bb1f6715248f20d3fac1635252c411845732
-function wait3(){
-    console.log('later 3');
+function wait1(s){
+    perflog(s,'setTimeout(0) // next event loop');
 }
-setTimeout(wait3, 0);
-!function wait3b(){
-    console.log('later 3b');
-}();
+setTimeout(wait1, 0, document.currentScript);
+
+!function wait1b(s){
+    perflog(s,'!function() // bang function');
+}(document.currentScript);
+
+(async function wait1c(s){
+    perflog(s,'(function(){}(()) // immediate execute');
+})(document.currentScript);
+
+perflog(document.currentScript,'done(); // exec done');

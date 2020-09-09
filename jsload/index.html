@@ -6,39 +6,68 @@
 
     <!-- (A) SCRIPT READY FUNCTION -->
     <script>
+        function perflog(s, name) {
+            const async = s.async ? " async" : "";
+            const defer = s.defer ? " defer" : "";
+            const src = s.src.replace(/^https?:\/\/[^\/]+/, "");
+            performance.mark(`${src}${async}${defer}: ${name}`);
+        }
+
         function ready (whichone) {
-            console.log(`onload ${whichone.src}`);
+            perflog(whichone, 'onload();');
         }
     </script>
     <link href="//stevesouders.com/bin/resource.cgi?type=css&sleep=2&t=1512427244" rel="stylesheet">
+    <script src="//stevesouders.com/bin/resource.cgi?type=js&sleep=2&t=1512427243" onload="ready(this)"></script>
 
     <!-- (B) APPEND ONLOAD ATTRIBUTE -->
-    <script defer src="1.js" onload="ready(this)"></script>
-    <script async src="2.js" onload="ready(this)"></script>
+    <script defer src="1.js" onload="ready(this)" type="application/javascript"></script>
+    <script async src="2.js" onload="ready(this)" type="application/javascript"></script>
 
     <!-- (C) DYNAMIC JS LOAD JS -->
-    <script async>
+    <script async type="application/javascript">
         !function init(src) {
-            var script = document.createElement('script');
+            const script = document.createElement('script');
             script.setAttribute("async", "");
             script.src = src;
             script.onload = function () {
-                console.log(this.src);
+                perflog(this, "appendChild().onload(); // inline injected onload")
+                //performance.mark(`onload: ${this.src}`);
             };
-            console.log(`inject: ${script.src}`);
+            perflog(document.currentScript, "!function(); // inline bang function")
+            perflog(script, "appendChild(); // injected")
+            // performance.mark(`injected: ${script.src}`);
             document.head.appendChild(script);
         }('3.js');
-        console.log('inline js done');
+        perflog(document.currentScript, "done(); // inline js done")
     </script>
     <script src="//stevesouders.com/bin/resource.cgi?type=js&sleep=2&t=1512427244" onload="ready(this)"></script>
     <script async src="//stevesouders.com/bin/resource.cgi?type=js&sleep=2&t=1512427245" onload="ready(this)"></script>
 
     <script>
-        console.log ('head done');
+        perflog(document.currentScript, "head-done(); // html <head> done")
+        function done() {
+            const resultsNode = document.getElementById('results');
+            let results = "";
+
+            const entries = performance.getEntries()
+                .filter(e => e.entryType === 'mark')
+                .sort((a, b) => a.startTime - b.startTime);
+
+            for (const mark of entries) {
+                results += `<tr><td>${mark.startTime}</td><td>${mark.name}</td></tr>`;
+            }
+
+            resultsNode.innerHTML = results; // TODO: cleanup
+        }
+        window.addEventListener('load', done);
     </script>
+
 
 </head>
 <body>
+<table id="results">
 
+</table>
 </body>
 </html>
