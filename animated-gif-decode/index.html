@@ -78,8 +78,8 @@
     <script>
         const TEST_GROUPS=[".gif", ".webp", ".avif", "_av1.mp4", ".mp4", "_hvc1.mp4"];
         const TEST_RUNS=11;
-        let perfEntries = [];
-        let results = [];
+        const perfEntries = [];
+        const results = [];
 
         //helper promise to sleep
         function sleep(duration, val) {
@@ -105,16 +105,6 @@
             }
         }
 
-        // helper method for finding the median in a list of numbers (filtering out non numbers)
-        function median(values) {
-            values = values
-                .slice(0)
-                .filter(value => Number(value) === value)
-                .sort( function(a, b) {return a - b; } );
-
-            return middle(values);
-        }
-
         // helper method to find the middle value in a list
         function middle(values) {
             let len = values.length;
@@ -124,6 +114,25 @@
                 return (values[half - 1] + values[half]) / 2.0;
             else
                 return values[half];
+        }
+
+        // helper method for finding the median in a list of numbers (filtering out non numbers)
+        function median(values) {
+            if (!values || values.length === 0) return null;
+            if (!values || values.length === 1) return values[0];
+
+            values = values
+                .sort( function(a, b) {return a - b; } );
+
+            return middle(values);
+        }
+        function min(values) {
+            if (!values || values.length <= 1) return null;
+            return Math.min(...values);
+        }
+        function max(values) {
+            if (!values || values.length <= 1) return null;
+            return Math.max(...values);
         }
 
         function formatMetric(value, round = 0, unit = "ms", empty="&#x1F6AB;", prefix="") {
@@ -136,28 +145,60 @@
 
             return empty;
         }
-        function reportMetric(name, value, min = null, max = null, round = 0, unit = "ms") {
-            if (!!value && Number(value) === value)
-                value = Math.round(value*(10**round) + Number.EPSILON)/(10**round);
+        function reportMetric(name, value, round = 0, unit = "ms") {
 
-            let valueText = formatMetric(value, round, unit);
-            let minValue = formatMetric(min, round, unit, "");
-            let maxValue = formatMetric(max, round, unit, "");
+            if (!Array.isArray(value)) value = [value];
+            value = value.slice(0)
+                        .filter(v => !!v)
+                        .filter(v => Number(v) === v);
 
-            document.getElementById(name).innerHTML = `<div>${valueText}</div><div class="desc" style="float:left">${minValue}</div><div class="desc" style="float:right">${maxValue}</div>`;
+            let medianValue = median(value);
+            const minValue = min(value);
+            const maxValue = max(value);
+
+            if (medianValue) {
+                medianValue = Math.round(medianValue * (10 ** round) + Number.EPSILON) / (10 ** round);
+            }
+
+            let valueText = formatMetric(medianValue, round, unit);
+            let minValueText = formatMetric(minValue, round, unit, "");
+            let maxValueText = formatMetric(maxValue, round, unit, "");
+
+            document.getElementById(name).innerHTML = `<div>${valueText}</div><div class="desc" style="float:left">${minValueText}</div><div class="desc" style="float:right">${maxValueText}</div>`;
         }
 
-        async function endTest(test, waitCounter = 0) {
+        async function endTest(test) {
             // add resource perfEntry
-            test.perf = perfEntries.filter(v => v.entryType === 'resource' && test.url === v.name)[0];
+            if (!test.perf) test.perf = perfEntries.filter(v => v.entryType === 'resource' && test.url === v.name)[0];
             // add element perfEntry
-            test.elementPerf = perfEntries.filter(v => v.entryType === 'element' && test.url === v.url)[0];
+            if (!test.elementPerf) test.elementPerf = perfEntries.filter(v => v.entryType === 'element' && test.url === v.url)[0];
 
-            let isReady = test.onErrorEnd || (test.onLoadEnd && test.perf && test.rafEnd);
-            if (!isReady && waitCounter < 3) {
-                // sometimes (safari) doesn't load the Performance getEntries in time. why?
+            if (!test.onErrorEnd) {
+                if (!test.perfEndTime) {
+                    if (test.perf) {
+                        test.perfEndTime = test.perf.responseStart;
+                    }
+                    else if (test.decodeEnd) {
+                        // sometimes (safari) doesn't fire ResourceTiming entries
+                        test.perfEndTime = performance.now();
+                    }
+                    else if ( performance.now() - test.testStart > 2 * 1000) {
+                        // sometimes (safari) doesn't load the Performance getEntries in time. why?
+                        test.perfEndTime = performance.now();
+                    }
+                }
+                else if (performance.now() - test.perfEndTime >  800) {
+                    console.error(test);
+                    test.onErrorEnd = performance.now();
+                }
+            }
+
+            // loop if we aren't ready
+            let isReady = test.onErrorEnd || (test.onLoadEnd && test.decodeEnd && test.rafEnd && (test.elementPerf || !PerformanceObserver.supportedEntryTypes.includes('element')));
+            if (!isReady) {
+                console.log(`sleep 200: ${test.url}`)
                 await sleep(200);
-                return await endTest(test, ++waitCounter);
+                return await endTest(test);
             }
 
             // performance.timeOrigin is not reliable for long running page. why??
@@ -182,7 +223,7 @@
             results.push(test);
 
             let testSet = results.slice(testIndex*TEST_RUNS, (testIndex + 1) * TEST_RUNS - 1);
-            reportMetric(`bytes_${testIndex}`, !test.resourceBytes ? null : Math.round(test.resourceBytes / 1024 / 1024 * 100)/100, null, null, 1, 'MB');
+            reportMetric(`bytes_${testIndex}`, !test.resourceBytes ? null : Math.round(test.resourceBytes / 1024 / 1024 * 100)/100, 1, 'MB');
             reportMetric(`resourcetiming_${testIndex}`, test.resourceDur);
             reportMetric(`decode_${testIndex}`, test.decodeDur);
             reportMetric(`onloadhandler_${testIndex}`, test.onloadDur);
@@ -191,12 +232,11 @@
 
             // if last in the set, update to the median results (the last run won't be shown)
             if (results.length % TEST_RUNS === 0 || test.onErrorEnd) {
-
-                reportMetric(`resourcetiming_${testIndex}`, median(testSet.map(v => v.resourceDur)), Math.min(...testSet.map(v => v.resourceDur)), Math.max(...testSet.map(v => v.resourceDur)));
-                reportMetric(`decode_${testIndex}`, median(testSet.map(v => v.decodeDur)), Math.min(...testSet.map(v => v.decodeDur)), Math.max(...testSet.map(v => v.decodeDur)));
-                reportMetric(`onloadhandler_${testIndex}`, median(testSet.map(v => v.onloadDur)), Math.min(...testSet.map(v => v.onloadDur)), Math.max(...testSet.map(v => v.onloadDur)));
-                reportMetric(`raf_${testIndex}`, median(testSet.map(v => v.rafDur)), Math.min(...testSet.map(v => v.rafDur)), Math.max(...testSet.map(v => v.rafDur)));
-                reportMetric(`element_${testIndex}`, median(testSet.map(v => v.elementDur)), Math.min(...testSet.map(v => v.elementDur)), Math.max(...testSet.map(v => v.elementDur)));
+                reportMetric(`resourcetiming_${testIndex}`, testSet.map(v => v.resourceDur));
+                reportMetric(`decode_${testIndex}`, testSet.map(v => v.decodeDur));
+                reportMetric(`onloadhandler_${testIndex}`, testSet.map(v => v.onloadDur));
+                reportMetric(`raf_${testIndex}`, testSet.map(v => v.rafDur));
+                reportMetric(`element_${testIndex}`, testSet.map(v => v.elementDur));
             }
 
             //tidy up the display for the end...
@@ -214,8 +254,6 @@
                 resetTest();
                 return sleep(1000, nextTestIndex).then(runTest);
             }
-
-
 
             return Promise.resolve();
         }
