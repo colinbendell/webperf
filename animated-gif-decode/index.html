@@ -6,7 +6,35 @@
 
     <style type="text/css">
         thead tr td {font-size: 1.5em; text-align: center;}
-        TD { padding: 0.15em 0.3em; }
+        td { padding: 0.15em 0.3em; }
+        h1, .examples {
+            text-align: center;
+            float: right;
+            width:800px;
+            max-width:800px;
+            min-width:800px;
+        }
+        #ua {
+            text-align: right;
+        }
+        #ua .browser img {
+            height: 1.2em;
+            vertical-align: top;
+        }
+        #ua .os {
+            margin-top: -0.2rem;
+            font-size: 0.1rem;
+        }
+        #testimg {
+            float: right;
+            background: white;
+            padding: 4px;
+            width:800px;
+            max-width:800px;
+            max-height:450px;
+            min-width:800px;
+            min-height:450px;
+        }
         .timing { font-size: 1.5em; text-align: right; }
         .timeval {
             font-size: 1.5em;
@@ -23,7 +51,6 @@
         .examples {
             margin-top: -2em;
             margin-bottom: 1em;
-            margin-left: 5em;
         }
         a {
             color: orange;
@@ -32,51 +59,114 @@
             width: 100%;
         }
     </style>
-
+    <script src="uaparser.js"></script>
 </head>
 
 <body style="width: 900px; font-family: helvetica, arial; background: #000; color: #FFF;">
-
-    <h1 style="margin-left: 3em; font-size: 2.5em;">Animated Gif Comparison</h1>
-    <div class="examples">
-        <a href="#1.gif" target="_blank">river</a>
-        <a href="#2.gif" target="_blank">life of pi</a>
-        <a href="#3.gif" target="_blank">bladerunner</a>
-        <a href="#4.gif" target="_blank">matrix</a>
-        <a href="#5.gif" target="_blank">robots</a>
-        <a href="#6.gif" target="_blank">peaky blinders</a>
-        <a href="#7.gif" target="_blank">handmaid's tale</a>
-        <a href="#8.gif" target="_blank">Lebowski</a>
-    </div>
-
-    <div id=testimg style="float: left; background: white; padding: 4px; width:800px; height:450px;max-width:800px; max-height:450px;min-width:800px; min-height:450px;">
-
-    </div>
-
+    <header>
+        <h1 style="margin-left: 3em; font-size: 2.5em;">Animated Gif Comparison</h1>
+        <div class="examples">
+            <a href="#1.gif" target="_blank">river</a>
+            <a href="#2.gif" target="_blank">life of pi</a>
+            <a href="#3.gif" target="_blank">bladerunner</a>
+            <a href="#4.gif" target="_blank">matrix</a>
+            <a href="#5.gif" target="_blank">robots</a>
+            <a href="#6.gif" target="_blank">peaky blinders</a>
+            <a href="#7.gif" target="_blank">handmaid's tale</a>
+            <a href="#8.gif" target="_blank">Lebowski</a>
+        </div>
+    </header>
+    <div id=testimg></div>
     <table style="clear: both;">
         <thead>
-        <tr>
-            <td></td>
-            <td><a href="gif.html" target="_blank">GIF</a></td>
-            <td><a href="webp.html" target="_blank">WebP</a></td>
-            <td><a href="avif.html" target="_blank">AVIFs</a></td>
-            <td>MP4<br/>(av1)</td>
-            <td><a href="mp4.html" target="_blank">MP4<br/>(avc1)</a></td>
-            <td><a href="mp4_hvc1.html" target="_blank">MP4<br/>(hvc1)</a></td>
-        </tr>
+            <tr>
+                <td id="ua"></td>
+                <td><a href="gif.html" target="_blank">GIF</a></td>
+                <td><a href="webp.html" target="_blank">WebP</a></td>
+                <td><a href="avif.html" target="_blank">AVIFs</a></td>
+                <td><a href="mp4.html" target="_blank">MP4<br/>(avc1)</a></td>
+                <td><a href="mp4_hvc1.html" target="_blank">MP4<br/>(hvc1)</a></td>
+                <td><a href="mp4_av1.html" target="_blank">MP4<br/>(av1)</a></td>
+            </tr>
         </thead>
-        <tr> <td class=timing><div>Bytes:</div><div class="desc" >resource.encodedByteSize</div></td> <td class="timeval" id=bytes_0>...</td><td class="timeval" id=bytes_1></td><td class="timeval" id=bytes_2></td><td class="timeval" id=bytes_3></td><td class="timeval" id=bytes_4></td><td class="timeval" id=bytes_5></td> </tr>
-        <tr> <td class=timing><div>TRANSFER:</div><div class="desc" >resource.responseEnd() - resource.responseStart</div></td> <td class="timeval" id=resourcetiming_0>...</td><td class="timeval" id=resourcetiming_1></td><td class="timeval" id=resourcetiming_2></td><td class="timeval" id=resourcetiming_3></td><td class="timeval" id=resourcetiming_4></td><td class="timeval" id=resourcetiming_5></td> </tr>
-        <tr> <td class=timing><div>ONLOAD:</div><div class="desc" >img.onLoad() - resource.responseStart</div></td> <td class="timeval" id=onloadhandler_0>...</td><td class="timeval" id=onloadhandler_1></td><td class="timeval" id=onloadhandler_2></td><td class="timeval" id=onloadhandler_3></td><td class="timeval" id=onloadhandler_4></td><td class="timeval" id=onloadhandler_5></td> </tr>
-        <tr> <td class=timing><div>RAF:</div><div class="desc" >requestAnimationFrame() - resource.responseStart</div></td> <td class="timeval" id=raf_0>...</td><td class="timeval" id=raf_1></td><td class="timeval" id=raf_2></td><td class="timeval" id=raf_3></td><td class="timeval" id=raf_4></td><td class="timeval" id=raf_5></td> </tr>
-        <tr> <td class=timing><div>DECODE:</div><div class="desc" >img.decode() - resource.responseStart</div></td> <td class="timeval" id=decode_0>...</td><td class="timeval" id=decode_1></td><td class="timeval" id=decode_2></td><td class="timeval" id=decode_3></td><td class="timeval" id=decode_4></td><td class="timeval" id=decode_5></td> </tr>
-        <tr> <td class=timing><div>ELEMENT TIMING:</div><div class="desc" >PerformanceElementTiming.renderTime - resource.responseStart</div></td> <td class="timeval" id=element_0>...</td><td class="timeval" id=element_1></td><td class="timeval" id=element_2></td><td class="timeval" id=element_3></td><td class="timeval" id=element_4></td><td class="timeval" id=element_5></td> </tr>
+        <tr>
+            <td class=timing>
+                <div>Bytes:</div>
+                <div class="desc">resource.encodedByteSize</div>
+            </td>
+            <td class="timeval" id=bytes_0>...</td>
+            <td class="timeval" id=bytes_1></td>
+            <td class="timeval" id=bytes_2></td>
+            <td class="timeval" id=bytes_3></td>
+            <td class="timeval" id=bytes_4></td>
+            <td class="timeval" id=bytes_5></td>
+        </tr>
+        <tr>
+            <td class=timing>
+                <div>TRANSFER:</div>
+                <div class="desc">resource.responseEnd() - resource.responseStart</div>
+            </td>
+            <td class="timeval" id=resourcetiming_0>...</td>
+            <td class="timeval" id=resourcetiming_1></td>
+            <td class="timeval" id=resourcetiming_2></td>
+            <td class="timeval" id=resourcetiming_3></td>
+            <td class="timeval" id=resourcetiming_4></td>
+            <td class="timeval" id=resourcetiming_5></td>
+        </tr>
+        <tr>
+            <td class=timing>
+                <div>ONLOAD:</div>
+                <div class="desc">img.onLoad() - resource.responseStart</div>
+            </td>
+            <td class="timeval" id=onloadhandler_0>...</td>
+            <td class="timeval" id=onloadhandler_1></td>
+            <td class="timeval" id=onloadhandler_2></td>
+            <td class="timeval" id=onloadhandler_3></td>
+            <td class="timeval" id=onloadhandler_4></td>
+            <td class="timeval" id=onloadhandler_5></td>
+        </tr>
+        <tr>
+            <td class=timing>
+                <div>RAF:</div>
+                <div class="desc">requestAnimationFrame() - resource.responseStart</div>
+            </td>
+            <td class="timeval" id=raf_0>...</td>
+            <td class="timeval" id=raf_1></td>
+            <td class="timeval" id=raf_2></td>
+            <td class="timeval" id=raf_3></td>
+            <td class="timeval" id=raf_4></td>
+            <td class="timeval" id=raf_5></td>
+        </tr>
+        <tr>
+            <td class=timing>
+                <div>DECODE:</div>
+                <div class="desc">img.decode() - resource.responseStart</div>
+            </td>
+            <td class="timeval" id=decode_0>...</td>
+            <td class="timeval" id=decode_1></td>
+            <td class="timeval" id=decode_2></td>
+            <td class="timeval" id=decode_3></td>
+            <td class="timeval" id=decode_4></td>
+            <td class="timeval" id=decode_5></td>
+        </tr>
+        <tr>
+            <td class=timing>
+                <div>ELEMENT TIMING:</div>
+                <div class="desc">PerformanceElementTiming.renderTime - resource.responseStart</div>
+            </td>
+            <td class="timeval" id=element_0>...</td>
+            <td class="timeval" id=element_1></td>
+            <td class="timeval" id=element_2></td>
+            <td class="timeval" id=element_3></td>
+            <td class="timeval" id=element_4></td>
+            <td class="timeval" id=element_5></td>
+        </tr>
     </table>
 
     <p id="debug_navtiming">
     </p>
     <script>
-        const TEST_GROUPS=[".gif", ".webp", ".avif", "_av1.mp4", ".mp4", "_hvc1.mp4"];
+        const TEST_GROUPS=[".gif", ".webp", ".avif", ".mp4", "_hvc1.mp4", "_av1.mp4"];
         const TEST_RUNS=11;
         const perfEntries = [];
         const results = [];
@@ -86,23 +176,6 @@
             return new Promise(resolve => {
                 setTimeout(resolve.bind(null, val), duration)
             });
-        }
-        const observerWorker = function(list) { perfEntries.push(...list.getEntries()); }
-        const resourceObserver = new PerformanceObserver(observerWorker);
-        const elementObserver = new PerformanceObserver(observerWorker);
-        for (const observerType of ['resource', 'element']) {
-            if (PerformanceObserver.supportedEntryTypes.includes(observerType)) {
-                try {
-                    resourceObserver.observe({type: observerType, buffered: true});
-                }
-                catch {
-                    // Safari doesn't support `type` but does allow buffered with `entryTypes`
-                    // Firefox doesn't support `entryTypes` with buffered
-                    // Chrome probably does whatever it wants
-                    elementObserver.observe({entryTypes: [observerType], buffered: true});
-                }
-
-            }
         }
 
         // helper method to find the middle value in a list
@@ -133,6 +206,24 @@
         function max(values) {
             if (!values || values.length <= 1) return null;
             return Math.max(...values);
+        }
+
+        const observerWorker = function(list) { perfEntries.push(...list.getEntries()); }
+        const resourceObserver = new PerformanceObserver(observerWorker);
+        const elementObserver = new PerformanceObserver(observerWorker);
+        for (const observerType of ['resource', 'element']) {
+            if (PerformanceObserver.supportedEntryTypes.includes(observerType)) {
+                try {
+                    resourceObserver.observe({type: observerType, buffered: true});
+                }
+                catch {
+                    // Safari doesn't support `type` but does allow buffered with `entryTypes`
+                    // Firefox doesn't support `entryTypes` with buffered
+                    // Chrome probably does whatever it wants
+                    elementObserver.observe({entryTypes: [observerType], buffered: true});
+                }
+
+            }
         }
 
         function formatMetric(value, round = 0, unit = "ms", empty="&#x1F6AB;", prefix="") {
@@ -187,14 +278,17 @@
                         test.perfEndTime = performance.now();
                     }
                 }
-                else if (performance.now() - test.perfEndTime >  800) {
-                    console.error(test);
+                else if (!test.decodeEnd && test.rafEnd && performance.now() - test.perfEndTime >  600) {
+                    // this is really hokey - Safari 14 seems to have image.decode() weirdness
+                    test.decodeError = performance.now();
+                }
+                else if (performance.now() - test.perfEndTime >  20000) {
                     test.onErrorEnd = performance.now();
                 }
             }
 
             // loop if we aren't ready
-            let isReady = test.onErrorEnd || (test.onLoadEnd && test.decodeEnd && test.rafEnd && (test.elementPerf || !PerformanceObserver.supportedEntryTypes.includes('element')));
+            let isReady = test.onErrorEnd || (test.onLoadEnd && test.rafEnd && (test.decodeEnd || test.decodeError) && (test.elementPerf || !PerformanceObserver.supportedEntryTypes.includes('element')));
             if (!isReady) {
                 console.log(`sleep 200: ${test.url}`)
                 await sleep(200);
@@ -241,27 +335,32 @@
 
             //tidy up the display for the end...
             if (test.onErrorEnd) {
-                resetTest();
-                let image = new Image;
-                image.src = getImageUrl();
-                document.getElementById("testimg").appendChild(image);
+                console.error(`Error loading ${test.src}`);
+                console.error(test);
+
                 results.push(...new Array(TEST_RUNS - results.length % TEST_RUNS));
             }
 
             if (results.length < (TEST_GROUPS.length*TEST_RUNS)) {
                 // if we have another test set to run, kick it off
                 let nextTestIndex = TEST_GROUPS[Math.floor(results.length / TEST_RUNS)];
-                resetTest();
-                return sleep(1000, nextTestIndex).then(runTest);
+                await sleep(1000);
+                return runTest(nextTestIndex);
             }
-
-            return Promise.resolve();
+            else {
+                resetTest();
+                let image = new Image;
+                image.src = getImageUrl();
+                document.getElementById("testimg").appendChild(image);
+            }
         }
 
         // reset old test.
         // TODO: should we wait until the CPU quiets down?
         function resetTest() {
-            document.getElementById("testimg").innerText = "";
+            let node = document.getElementById("testimg");
+            let cNode = node.cloneNode(false);
+            node.parentNode.replaceChild(cNode, node);
         }
 
         /**
@@ -273,7 +372,7 @@
             console.log(`Loading img: ${srcUrl}`)
             let currTest = {};
 
-            let image = new Image;
+            const image = new Image;
 
             image.elementTiming = `elementTiming`;
 
@@ -292,10 +391,10 @@
             image.src = srcUrl;
             document.getElementById("testimg").appendChild(image);
 
-            // don't await, because Safari can go into limbo land and not always return
+            // don't await, because Safari can go into limbo land and not always return for mp4s
             image.decode()
                 .then(() => currTest.decodeEnd = performance.now())
-                .catch(() => currTest.onErrorEnd = performance.now());
+                .catch(() => currTest.onLoadError = currTest.onDecodeError = performance.now());
 
             currTest.url = image.src;
             return currTest;
@@ -317,7 +416,8 @@
          *
          * @param suffix the replacement file extension for the test set
          */
-        async function runTest(suffix) {
+        async function runTest(suffix = null) {
+            resetTest();
             let url = getImageUrl();
 
             if (suffix) url = url.replace(/\.[^.]+$/, suffix);
@@ -327,8 +427,20 @@
             await endTest(test);
         }
 
-        //kick things off
-        sleep(1000).then(runTest);
+        async function start() {
+            const ua = new UAParser();
+            const browser = ua.getBrowser();
+            const os = ua.getOS();
+//            document.getElementById("ua").style.backgroundImage = `url(${(browser.name||"").toLowerCase()}_48x48.png)`;
+            document.getElementById("ua").innerHTML = `<div class="browser"><img src="${(browser.name||"").toLowerCase()}_32x32.png"/> ${browser.name} ${browser.major}</div><div class="os">${os.name.replace("Mac OS", "macOS")} ${os.version.replace(/(^\d+\.?\d*).*/, "$1")}</div>`;
+            //document.getElementById("ua").innerHTML = `<span>${browser.major}</span>`;
+            console.log(ua);
+            await sleep(1000); //make sure the browser is quiet
+            await runTest();
+        }
+
+        window.addEventListener('load', start);
+
     </script>
 </body>
 </html>
