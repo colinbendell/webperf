@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>image.decode() test</title>
+    <script src="testharness.js"></script>
+    <script src="testharnessreport.js"></script>
+    <style>
+        img {
+            width: 10%;
+
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+<h1>image.decode() promise test</h1>
+<div id="results"></div>
+<script>
+    function sleep(duration, val) {
+        return new Promise(resolve => {
+            setTimeout(resolve.bind(null, val), duration)
+        });
+    }
+    function runTest() {
+        const testcases = [
+            {url: 'jp2.jp2', status: true},
+            {url: 'jpg.jpg', status: true},
+            {url: '404.jpg', status: false},
+            {url: 'avc1.mp4', status: true},
+            {url: 'hvc1.mp4', status: true},
+            {url: 'av1.mp4', status: false},
+        ]
+        for (const run of testcases) {
+
+            promise_test(async t => {
+                //poor mans semaphore
+                let decodeDone = false;
+
+                const img = new Image();
+
+                // set short timeouts after the onload / onerror fire
+                img.onload = () => t.step_wait(() => decodeDone === true, "image.decode() promise did not resolve after onload()", 500);
+                img.onerror = () => t.step_wait(() => decodeDone === true, "image.decode() promise did not resolve after onerror()", 500);
+
+                //
+                img.src = run.url;
+                document.body.appendChild(img);
+
+                // set longer timeout so we don't trip over network timing; again we don't `await`
+                t.step_wait(() => decodeDone === true, "image.decode() promise did not resolve", 1500);
+
+                await img.decode()
+                    .then(() => (decodeDone = true) && assert_equals(run.status, true, "image.decode() should Promise.resolve() successfully"))
+                    .catch(() => (decodeDone = true) && assert_equals(run.status, false, "image.decode() should Promise.reject()"));
+            }, `${run.url} should image.decode() ${run.status ? 'successfully' : 'with a failure'}`);
+
+        }
+    }
+    window.addEventListener('load', runTest);
+
+</script>
+</body>
+</html>
